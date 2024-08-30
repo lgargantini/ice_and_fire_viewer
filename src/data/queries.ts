@@ -7,14 +7,15 @@ export const FetchICEAndFireHouses = (page: number, pageSize: number) => (
         .catch(error => console.error(error))
 );
 
-//pagination
+// Pagination
 // You specify which page you want to access with the ?page parameter,
 // if you don't provide the ?page parameter the first page will be returned. You can also specify the size of the page with the ?pageSize parameter, 
 // if you don't provide the ?pageSize parameter the default size of 10 will be used.
-// Let's make a request for the first page of characters with a page size of 10. Since we're only interested in the pagination information we provide the -I parameter to say that we only care about the headers.
+// Let's make a request for the first page of characters with a page size of 10.
 
-// $ curl -I "https://www.anapioficeandfire.com/api/characters?page=1&pageSize=10"
-//  https://anapioficeandfire.com/api/houses?page=100&pageSize=10
+// e.g.: 
+// https://www.anapioficeandfire.com/api/characters?page=1&pageSize=10
+// https://anapioficeandfire.com/api/houses?page=100&pageSize=10
 // it will return empty string for the last page
 
 export const handlePaginationAsync = async (url: URL, page: number, pageSize: number): Promise<Response | void> => {
