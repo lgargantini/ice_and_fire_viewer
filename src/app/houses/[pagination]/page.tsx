@@ -1,31 +1,34 @@
 import { FetchCharactersInBulk, FetchICEAndFireHouses } from "@/data/queries";
-import { Suspense } from "react";
 import { House } from "@/data/types";
 import Link from "next/link";
 import Characters from "../../characters/page";
 
+export interface IPagination {
+    page: number;
+    hasPrevious: boolean;
+    hasNext: boolean;
+}
+
 export default async function Houses({ params: { pagination = "1" } }: { params: { pagination: string } }) {
     const houses: House[] = await FetchICEAndFireHouses(parseInt(pagination), 10);
-    const housesWithSwornMembers = houses.filter((house: House) => (house.swornMembers.length > 0))
-    const charactersLink = housesWithSwornMembers.map((house: House) => {
+    const housesWithSwornMembers: House[] = houses.filter((house: House) => (house.swornMembers.length > 0))
+    const charactersLink: string[] = housesWithSwornMembers.map((house: House) => {
         return house.swornMembers;
-    }).flat(1);
+    }).flat(1); //flatten the array to get all the characters links
     const characters = await FetchCharactersInBulk(charactersLink).then((data) => {
-        //translate response to Character type
-        //add data validation and error handling
-        //next step: display the data in a table
         if (data?.length === 0) return [];
         if (data) {
             return data;
         }
     }).catch((error) => console.error(error));
+
     const hasPrevious = parseInt(pagination) > 1;
-    const hasNext = houses.length < 0; //no more results to show
+    const hasNext = houses?.length > 0 && houses.length === 10; //assumption: if the length of the response is 10, there is a next page
     const nextPage = (page: number) => Number(1 + page);
 
-    const PaginationComponent = (page: number, hasPrevious: boolean, hasNext: boolean) => (
+    const PaginationComponent = ({ page, hasPrevious, hasNext }: IPagination) => (
         <div className="flex items-center gap-8">
-            <Link href={page > 2 ? `/houses/${page - 1}` : '/'}>
+            <Link href={page > 2 ? `/houses/${page - 1}` : '/'} passHref legacyBehavior>
                 <button disabled={!hasPrevious}
                     className="relative h-8 max-h-[32px] w-8 max-w-[32px] select-none rounded-lg border border-gray-900 text-center align-middle font-sans text-xs font-medium uppercase text-white-900 transition-all hover:opacity-75 focus:ring focus:ring-gray-300 active:opacity-[0.85] disabled:pointer-events-none disabled:opacity-50 disabled:shadow-none"
                     type="button">
@@ -40,11 +43,10 @@ export default async function Houses({ params: { pagination = "1" } }: { params:
             <p className="block font-sans text-base antialiased font-normal leading-relaxed text-white-700">
                 Page <b className="text-white-900">{page}</b>
             </p>
-            <Link href={`/houses/${nextPage(page)}`}>
+            <Link href={`/houses/${nextPage(page)}`} passHref legacyBehavior>
                 <button
                     disabled={!hasNext}
                     className="relative h-8 max-h-[32px] w-8 max-w-[32px] select-none rounded-lg border border-gray-900 text-center align-middle font-sans text-xs font-medium uppercase text-white-900 transition-all hover:opacity-75 focus:ring focus:ring-gray-300 active:opacity-[0.85] disabled:pointer-events-none disabled:opacity-50 disabled:shadow-none"
-                    // onClick={() => hasNext && setPage(page + 1)}
                     type="button">
                     <span className="absolute transform -translate-x-1/2 -translate-y-1/2 top-1/2 left-1/2">
                         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth="2" stroke="currentColor"
@@ -76,16 +78,14 @@ export default async function Houses({ params: { pagination = "1" } }: { params:
                                     <td className="border px-4 py-2">{house.name}</td>
                                     <td className="border px-4 py-2">{house.region}</td>
                                     {characters?.length && <td className="border px-4 py-2">
-                                        <Suspense fallback={<div>Loading...</div>}>
-                                            <Characters charactersLink={house.swornMembers} characters={characters} />
-                                        </Suspense>
+                                        <Characters charactersLink={house.swornMembers} characters={characters} />
                                     </td>}
                                 </tr>
                             );
                         })}
                     </tbody>
                 </table>
-                {PaginationComponent(parseInt(pagination), hasPrevious, hasNext)}
+                <PaginationComponent page={parseInt(pagination)} hasPrevious={hasPrevious} hasNext={hasNext} />
             </div>
         </div>
     )
