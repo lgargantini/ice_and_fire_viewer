@@ -1,9 +1,10 @@
+import { Character } from "./types";
 //fetch data from https://anapioficeandfire.com/api/houses using fetch
 const HOUSE_URL: URL = new URL('https://anapioficeandfire.com/api/houses');
 
-export const FetchICEAndFireHouses = (page: number, pageSize: number) => (
+export const FetchICEAndFireHouses = (page: number, pageSize: number): Promise<any> => (
     handlePaginationAsync(HOUSE_URL, page, pageSize)
-        .then(response => response?.json())
+        .then(response => response?.json()) 
         .catch(error => console.error(error))
 );
 
@@ -34,7 +35,7 @@ export const handlePaginationAsync = async (url: URL, page: number, pageSize: nu
     }
 }
 
-export const FetchCharactersInBulk = (characterLinks: string[]) => (
+export const FetchCharactersInBulk = (characterLinks: string[]): Promise<Character[] | void> => (
     Promise.all(characterLinks.map(characterLink => fetch(characterLink).then(response => response.json())))
         .catch(error => console.error(error))
 );
